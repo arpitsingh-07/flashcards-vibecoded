@@ -13,3 +13,4 @@ Tech Stack:
 - Streamlit
 - Gemini API
 
+Live Link: https://flashcards-vibecoded.vercel.app/
