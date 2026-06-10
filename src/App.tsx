@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Home, BarChart2, Settings as SettingsIcon, Plus, Play, 
   Trash2, ArrowLeft, X, Edit, Copy, ChevronRight, CheckCircle2, 
-  HelpCircle, MoreVertical, LayoutGrid, Import, Shuffle, SkipForward
+  HelpCircle, MoreVertical, LayoutGrid, Import, Shuffle, SkipForward,
+  Sparkles, Loader2
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, 
@@ -489,6 +490,7 @@ function DeckEditorView({ deck, saveDeck, goBack, startStudy, startQuiz, showToa
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isAddCardModalOpen, setAddCardModalOpen] = useState(false);
   const [isBulkImportOpen, setBulkImportOpen] = useState(false);
+  const [isAIGenerateOpen, setAIGenerateOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<Card | null>(null);
 
   const dueCount = deck.cards.filter(isDue).length;
@@ -579,6 +581,7 @@ function DeckEditorView({ deck, saveDeck, goBack, startStudy, startQuiz, showToa
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Cards</h2>
           <div className="flex gap-3">
+            <button onClick={() => setAIGenerateOpen(true)} className="btn-secondary text-[#3B82F6] hover:bg-[#3B82F6]/10 border-[#3B82F6]/30 text-sm py-2"><Sparkles size={16}/> AI generate</button>
             <button onClick={() => setBulkImportOpen(true)} className="btn-secondary text-sm py-2"><Import size={16}/> Bulk add</button>
             <button onClick={() => setAddCardModalOpen(true)} className="btn-primary text-sm py-2"><Plus size={16}/> Add card</button>
           </div>
@@ -630,6 +633,24 @@ function DeckEditorView({ deck, saveDeck, goBack, startStudy, startQuiz, showToa
 
       {isBulkImportOpen && (
         <BulkImportModal onClose={() => setBulkImportOpen(false)} onImport={handleBulkImport} />
+      )}
+
+      {isAIGenerateOpen && (
+        <AIGenerateModal 
+          onClose={() => setAIGenerateOpen(false)} 
+          onGenerate={(newCards: any[]) => {
+            const mappedCards = newCards.map(c => ({
+              id: generateId(),
+              front: c.front,
+              back: c.back,
+              nextReview: Date.now(),
+              masteryScale: 0
+            }));
+            saveDeck({ ...deck, cards: [...mappedCards, ...deck.cards] });
+            showToast(`AI generated ${mappedCards.length} cards`);
+            setAIGenerateOpen(false);
+          }} 
+        />
       )}
     </div>
   );
@@ -710,6 +731,68 @@ function BulkImportModal({ onClose, onImport }: any) {
         <div className="flex gap-4">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
           <button onClick={() => onImport(text)} className="btn-primary flex-1">Import cards</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AIGenerateModal({ onClose, onGenerate }: any) {
+  const [text, setText] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGenerate = async () => {
+    if (!text.trim()) return;
+    setIsGenerating(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/generate-cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (!res.ok) throw new Error('Failed to generate');
+      const data = await res.json();
+      onGenerate(data.cards || []);
+    } catch (e: any) {
+      setError(e?.message || 'Generation failed. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content max-w-[600px]" onClick={e => e.stopPropagation()}>
+         <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#3B82F6]/20 text-[#3B82F6] flex items-center justify-center">
+              <Sparkles size={16} />
+            </div>
+            <h2 className="text-xl font-bold">Generate with AI</h2>
+          </div>
+          <button type="button" onClick={onClose} disabled={isGenerating} className="text-muted hover:text-white"><X size={24}/></button>
+        </div>
+        
+        <p className="text-sm text-muted mb-4">Paste your study material, notes, or article below. Our AI will automatically extract key concepts into a set of highly effective flashcards.</p>
+        
+        <textarea 
+          rows={10} 
+          value={text} 
+          onChange={e => setText(e.target.value)} 
+          placeholder="Paste your study material here..." 
+          className="font-sans text-sm mb-2 resize-y"
+          disabled={isGenerating}
+        />
+        {error && <p className="text-[#EF4444] text-sm mb-4">{error}</p>}
+        {isGenerating && <p className="text-[#3B82F6] text-sm font-medium animate-pulse mb-4">Generating flashcards... this may take a few seconds.</p>}
+        
+        <div className="flex gap-4 mt-6">
+          <button type="button" onClick={onClose} disabled={isGenerating} className="btn-secondary flex-1">Cancel</button>
+          <button onClick={handleGenerate} disabled={isGenerating || !text.trim()} className="btn-primary flex-1 bg-[#3B82F6] hover:bg-[#2563EB]">
+            {isGenerating ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : <><Sparkles size={16} /> Generate cards</>}
+          </button>
         </div>
       </div>
     </div>
