@@ -5,7 +5,7 @@ import { GoogleGenAI, Type, Schema } from '@google/genai';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 const PORT = 3000;
 
 app.post('/api/generate-cards', async (req, res) => {
@@ -16,7 +16,7 @@ app.post('/api/generate-cards', async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: `Create highly effective flashcards from the following study material.
 Focus on key concepts, vocabulary, and important facts.
 Make the questions clear and the answers concise.
@@ -47,9 +47,16 @@ ${text}`,
 
     const data = JSON.parse(response.text || '{"cards":[]}');
     res.json(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to generate cards' });
+    const msg = error?.message || '';
+    let userMsg = 'Failed to generate flashcards. Please check your material and try again.';
+    if (msg.includes('503') || msg.includes('high demand') || msg.includes('UNAVAILABLE')) {
+      userMsg = 'The AI model is currently experiencing high demand. Please try again in a few moments.';
+    } else if (msg.includes('429')) {
+      userMsg = 'Too many requests. Please wait a moment and try again.';
+    }
+    res.status(500).json({ error: userMsg });
   }
 });
 

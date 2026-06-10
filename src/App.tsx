@@ -752,7 +752,10 @@ function AIGenerateModal({ onClose, onGenerate }: any) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
       });
-      if (!res.ok) throw new Error('Failed to generate');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to generate');
+      }
       const data = await res.json();
       onGenerate(data.cards || []);
     } catch (e: any) {
@@ -934,11 +937,11 @@ function StudyView({ deck, settings, onComplete, onExit }: any) {
       {/* Card Arena */}
       <div className="flex-grow flex flex-col items-center justify-center w-full max-w-[900px] p-6 relative pb-24">
         
-        <div className="w-full h-[400px] max-w-[700px] flip-card mx-auto cursor-pointer" onClick={handleFlip}>
-          <div className={`flip-card-inner shadow-xl ${isFlipped ? 'flipped' : ''}`}>
+        <div className={`w-full h-[400px] max-w-[700px] flip-card mx-auto cursor-pointer ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
+          <div className="flip-card-inner">
             
             {/* Front */}
-            <div className="flip-card-front bg-[#161B22] border border-[#30363D] rounded-lg relative">
+            <div className="flip-card-front shadow-xl bg-[#161B22] border border-[#30363D] rounded-lg relative">
               <span className="absolute top-6 left-6 text-xs font-bold text-[#8B949E] tracking-widest uppercase">Front</span>
               <div className="flex-1 flex justify-center items-center overflow-y-auto w-full p-4">
                 <p className="text-[28px] font-mono leading-[1.6] text-center text-[#F0F6FC] whitespace-pre-wrap">{card?.front}</p>
@@ -949,7 +952,7 @@ function StudyView({ deck, settings, onComplete, onExit }: any) {
             </div>
 
             {/* Back */}
-            <div className="flip-card-back bg-[#161B22] border-2 border-[#3B82F6] rounded-lg relative">
+            <div className="flip-card-back shadow-xl bg-[#161B22] border-2 border-[#3B82F6] rounded-lg relative">
               <span className="absolute top-6 left-6 text-xs font-bold text-[#3B82F6] tracking-widest uppercase">Back</span>
               <div className="flex-1 flex justify-center items-center overflow-y-auto w-full p-4">
                 <p className="text-[28px] font-mono leading-[1.6] text-center text-[#F0F6FC] whitespace-pre-wrap">{card?.back}</p>
