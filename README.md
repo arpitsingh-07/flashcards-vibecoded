@@ -1,4 +1,4 @@
-Flashcards VibeCoded
+FlashFocus
 
 Generate flashcards and quizzes from study material using AI.
 
