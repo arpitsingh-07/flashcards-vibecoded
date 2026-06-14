@@ -1,5 +1,5 @@
 {
-  "name": "Flashcards App",
+  "name": "FlashFocus",
   "description": "Create and review flashcards using an AI generator or manual entry, with built-in spaced repetition features.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
