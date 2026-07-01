@@ -1,20 +1,32 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# FlashFocus
 
-# Run and deploy your AI Studio app
+A flashcard app for studying with spaced repetition. Generate cards from a topic using Gemini, or add them manually, then review with a scheduler that adapts to how well you know each card.
 
-This contains everything you need to run your app locally.
+**Live demo:** https://flashcards-vibecoded.vercel.app
 
-View your app in AI Studio: https://ai.studio/apps/045a22b4-f0f5-4c5f-8978-a10ad23cfdba
+## Features
 
-## Run Locally
+- AI-generated flashcards from any topic or text (Gemini API)
+- Manual card creation and editing
+- Spaced-repetition review scheduling
+- Progress stats and charts
+- Responsive, animated UI
 
-**Prerequisites:**  Node.js
+## Stack
 
+React 19 - Vite - TypeScript - Tailwind CSS - Express - Google Gemini API - Recharts
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Running locally
+
+```bash
+npm install
+cp .env.example .env.local   # add your GEMINI_API_KEY
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+npm start
+```
